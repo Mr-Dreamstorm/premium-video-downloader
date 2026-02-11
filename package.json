@@ -1,0 +1,10 @@
+{
+  "name": "premium-video-downloader",
+  "type": "module",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.18.2",
+    "@ybd-project/ytdl-core": "^5.0.0",
+    "cors": "^2.8.5"
+  }
+}
