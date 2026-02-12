@@ -1,6 +1,6 @@
 {
   "name": "premium-video-downloader",
-  "version": "4.0.2",
+  "version": "5.0.0",
   "type": "module",
   "scripts": {
     "start": "node server.js"
@@ -8,7 +8,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "yt-dlp-exec": "1.0.2"
+    "youtube-dl-exec": "^3.0.28"
   },
   "engines": {
     "node": "18.x"
