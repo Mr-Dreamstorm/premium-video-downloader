@@ -12,8 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(cors());
 app.use(express.json());
 
-// ========== COOKIE FAYLNI TEKSHIRISH ==========
-const COOKIE_FILE = path.join(__dirname, 'cookies.txt');
+// ========== COOKIE FAYLNI TEKSHIRISH (o'zgartirildi!) ==========
+const COOKIE_FILE = path.join(__dirname, 'www.youtube.com_cookies.txt'); // ✅ YANGI NOM
 let hasCookies = fs.existsSync(COOKIE_FILE);
 
 console.log('\n' + '='.repeat(60));
@@ -56,9 +56,6 @@ app.get('/download', async (req, res) => {
     
     // Minimal chiqish (faqat xatoliklar)
     command += ' --quiet';
-    
-    // Progress ko'rsatish (ixtiyoriy)
-    // command += ' --progress';
     
     // Xatolikda qayta urinish
     command += ' --retries 3';
@@ -228,6 +225,7 @@ app.get('/status', (req, res) => {
     status: 'online',
     timestamp: new Date().toISOString(),
     cookies: hasCookies ? 'mavjud ✅' : 'mavjud emas ❌',
+    cookieFile: 'www.youtube.com_cookies.txt',
     platforms: [
       'YouTube', 'Instagram', 'TikTok', 'Facebook',
       'Twitter/X', 'Pinterest', 'Vimeo', 'Dailymotion',
@@ -323,6 +321,7 @@ app.get('/', (req, res) => {
             
             <div class="cookie-status">
                 <strong>🍪 Cookie holati:</strong> ${hasCookies ? 'MAVJUD ✅' : 'MAVJUD EMAS ❌'}<br>
+                <strong>📄 Cookie fayl:</strong> www.youtube.com_cookies.txt<br>
                 ${!hasCookies ? '<small>⚠️ YouTube uchun cookie kerak. Brauzeringizdan cookies.txt eksport qiling.</small>' : ''}
             </div>
 
@@ -367,6 +366,7 @@ app.listen(PORT, () => {
   console.log('='.repeat(60));
   console.log(`📡 Server: http://localhost:${PORT}`);
   console.log(`🍪 Cookie: ${hasCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
+  console.log(`📄 Cookie fayl: www.youtube.com_cookies.txt`);
   console.log(`🎯 Platformalar: 1000+`);
   console.log('='.repeat(60) + '\n');
 });
