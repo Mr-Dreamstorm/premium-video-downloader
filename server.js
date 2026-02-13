@@ -482,7 +482,7 @@ app.get('/', (req, res) => {
             
             <div class="status">
                 ✅ SERVER ISHGA TUSHDI DO\'STIM! <br>
-                <small>${new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent ekan do'\stim' })}</small>
+                <small>${new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent ekan do\'stim' })}</small>
             </div>
             
             <div class="cookie-status">
