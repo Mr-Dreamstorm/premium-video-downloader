@@ -12,14 +12,83 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(cors());
 app.use(express.json());
 
-// ========== COOKIE FAYLNI TEKSHIRISH (o'zgartirildi!) ==========
-const COOKIE_FILE = path.join(__dirname, 'www.youtube.com_cookies.txt'); // ✅ YANGI NOM
+// ========== COOKIE FAYL ==========
+const COOKIE_FILE = path.join(__dirname, 'www.youtube.com_cookies.txt');
 let hasCookies = fs.existsSync(COOKIE_FILE);
+
+// ========== PROXY SERVERLAR RO'YXATI (BEPUL) ==========
+const PROXY_LIST = [
+  // SOCKS5 proxy
+  'socks5://185.199.229.156:7492',
+  'socks5://2.56.215.75:6969',
+  'socks5://103.155.217.5:8080',
+  'socks5://45.136.68.19:1080',
+  'socks5://51.158.68.68:8811',
+  'socks5://157.230.105.209:39581',
+  'socks5://46.232.250.27:4145',
+  'socks5://139.162.78.109:4145',
+  
+  // HTTP proxy
+  'http://47.251.43.115:33',
+  'http://82.65.13.85:80',
+  'http://216.137.184.254:80',
+  'http://132.148.167.214:3128',
+  'http://8.213.128.6:8080',
+  'http://20.111.54.16:8123',
+  'http://154.16.146.44:80',
+  'http://165.227.196.37:3128',
+  
+  // SOCKS4 proxy
+  'socks4://119.40.82.207:45123',
+  'socks4://47.243.55.146:10003',
+  'socks4://70.166.43.209:4145',
+  'socks4://174.77.111.197:4145',
+  'socks4://98.185.94.65:4145'
+];
+
+// Tasodifiy proxy tanlash
+function getRandomProxy() {
+  return PROXY_LIST[Math.floor(Math.random() * PROXY_LIST.length)];
+}
+
+// Proxy ishlayotganini tekshirish
+function testProxy(proxy) {
+  return new Promise((resolve) => {
+    const testCmd = `curl -I --proxy ${proxy} --max-time 5 https://www.google.com -s -o /dev/null -w "%{http_code}"`;
+    exec(testCmd, (error, stdout) => {
+      resolve(!error && stdout.trim() === '200');
+    });
+  });
+}
+
+// Ishchi proxy topish
+async function findWorkingProxy() {
+  console.log('🔄 Ishchi proxy qidirilmoqda...');
+  
+  // Proxylarni aralashtirish
+  const shuffled = [...PROXY_LIST].sort(() => Math.random() - 0.5);
+  
+  // 5 tadan ko'p proxyni sinab ko'rmaymiz
+  const proxiesToTest = shuffled.slice(0, 5);
+  
+  for (const proxy of proxiesToTest) {
+    console.log(`   Sinov: ${proxy}`);
+    const works = await testProxy(proxy);
+    if (works) {
+      console.log(`   ✅ Ishchi proxy topildi: ${proxy}`);
+      return proxy;
+    }
+  }
+  
+  console.log('   ⚠️ Ishchi proxy topilmadi, tasodifiy ishlatiladi');
+  return getRandomProxy();
+}
 
 console.log('\n' + '='.repeat(60));
 console.log('🚀 PREMIUM VIDEO DOWNLOADER SERVER');
 console.log('='.repeat(60));
 console.log(`🍪 Cookie fayl ${hasCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
+console.log(`🌐 Proxy soni: ${PROXY_LIST.length} ta`);
 console.log('='.repeat(60) + '\n');
 
 // ========== UNIVERSAL DOWNLOAD ENDPOINT ==========
@@ -57,27 +126,31 @@ app.get('/download', async (req, res) => {
     // Minimal chiqish (faqat xatoliklar)
     command += ' --quiet';
     
-    // Xatolikda qayta urinish
-    command += ' --retries 3';
+    // Xatolikda qayta urinish (5 marta)
+    command += ' --retries 5';
     
-    // ===== YOUTUBE UCHUN MAXSUS SOZLAMALAR =====
+    // Brauzer User-Agent
+    command += ' --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"';
+    
+    // ===== YOUTUBE UCHUN MAXSUS SOZLAMALAR (PROXY BILAN) =====
     if (isYouTube) {
       console.log('🎯 Platforma: YouTube');
       
-      // So'rovlar orasida kutish (rate limiting uchun)
-      command += ' --sleep-interval 5';
-      command += ' --max-sleep-interval 10';
-      command += ' --retry-sleep 5';
+      // PROXY ISHLATISH
+      const proxy = await findWorkingProxy();
+      console.log(`🔄 Proxy ishlatilmoqda: ${proxy}`);
+      command += ` --proxy "${proxy}"`;
       
-      // Brauzer User-Agent (bot emasdek ko'rinish uchun)
-      command += ' --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"';
+      // So'rovlar orasida kutish (rate limiting uchun)
+      command += ' --sleep-interval 15';  // 15 soniya kutish
+      command += ' --max-sleep-interval 30'; // maksimal 30 soniya
+      command += ' --retry-sleep 10'; // xatolikda 10 soniya kutish
       
       // Cookie fayl mavjud bo'lsa
       if (hasCookies) {
         command += ` --cookies "${COOKIE_FILE}"`;
         console.log('🍪 Cookie ishlatilmoqda');
       } else {
-        // Cookie bo'lmasa, alternativ usullar
         console.log('⚠️ Cookie yo\'q, alternativ usul ishlatilmoqda');
         command += ' --extractor-args "youtube:player_client=android_embedded,ios"';
         command += ' --extractor-args "youtube:skip=webpage"';
@@ -86,6 +159,9 @@ app.get('/download', async (req, res) => {
       
       // Throttling dan qochish
       command += ' --throttled-rate 100';
+      
+      // Fragment retry
+      command += ' --fragment-retries 10';
     }
     
     // ===== INSTAGRAM UCHUN =====
@@ -126,7 +202,7 @@ app.get('/download', async (req, res) => {
     
     // yt-dlp ni ishga tushirish
     const ytdlp = exec(command, {
-      maxBuffer: 1024 * 1024 * 100 // 100MB buffer
+      maxBuffer: 1024 * 1024 * 200 // 200MB buffer
     });
     
     let videoBuffer = Buffer.from('');
@@ -142,7 +218,7 @@ app.get('/download', async (req, res) => {
       const msg = data.toString();
       errorMessage += msg;
       
-      // Progressni ko'rsatish (ixtiyoriy)
+      // Progressni ko'rsatish
       if (msg.includes('Destination') || msg.includes('Downloading')) {
         console.log(`   ${msg.trim()}`);
       }
@@ -171,11 +247,14 @@ app.get('/download', async (req, res) => {
         // Xatolik
         console.error('❌ Xatolik:', errorMessage || 'Noma\'lum xatolik');
         
+        // 429 xatosi bo'lsa, maxsus xabar
+        const is429 = errorMessage.includes('429');
+        
         res.status(500).json({
           error: 'Yuklab olishda xatolik',
           details: errorMessage || 'Noma\'lum xatolik',
-          tip: isYouTube && !hasCookies 
-            ? 'YouTube uchun cookie fayl kerak. Brauzeringizdan cookies.txt eksport qiling va GitHub\'ga yuklang.'
+          tip: is429 
+            ? 'YouTube 429 xatosi - juda ko\'p so\'rov. Server proxy ishlatadi, 1 soat kuting yoki boshqa video sinab ko\'ring.' 
             : 'Boshqa URL sinab ko\'ring yoki keyinroq qayta urining.'
         });
       }
@@ -188,6 +267,14 @@ app.get('/download', async (req, res) => {
       details: error.message 
     });
   }
+});
+
+// ========== PROXY RO'YXATI ENDPOINTI ==========
+app.get('/proxies', (req, res) => {
+  res.json({
+    total: PROXY_LIST.length,
+    proxies: PROXY_LIST
+  });
 });
 
 // ========== COOKIE YUKLASH ENDPOINTI ==========
@@ -226,6 +313,7 @@ app.get('/status', (req, res) => {
     timestamp: new Date().toISOString(),
     cookies: hasCookies ? 'mavjud ✅' : 'mavjud emas ❌',
     cookieFile: 'www.youtube.com_cookies.txt',
+    proxies: PROXY_LIST.length,
     platforms: [
       'YouTube', 'Instagram', 'TikTok', 'Facebook',
       'Twitter/X', 'Pinterest', 'Vimeo', 'Dailymotion',
@@ -236,7 +324,7 @@ app.get('/status', (req, res) => {
 
 // ========== ASOSIY SAHIFA ==========
 app.get('/', (req, res) => {
-  res.send(`
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -305,6 +393,13 @@ app.get('/', (req, res) => {
                 padding: 15px;
                 margin: 20px 0;
             }
+            .proxy-info {
+                background: rgba(0,212,255,0.1);
+                border: 2px solid #00d4ff;
+                border-radius: 12px;
+                padding: 15px;
+                margin: 20px 0;
+            }
         </style>
     </head>
     <body>
@@ -321,8 +416,12 @@ app.get('/', (req, res) => {
             
             <div class="cookie-status">
                 <strong>🍪 Cookie holati:</strong> ${hasCookies ? 'MAVJUD ✅' : 'MAVJUD EMAS ❌'}<br>
-                <strong>📄 Cookie fayl:</strong> www.youtube.com_cookies.txt<br>
-                ${!hasCookies ? '<small>⚠️ YouTube uchun cookie kerak. Brauzeringizdan cookies.txt eksport qiling.</small>' : ''}
+                <strong>📄 Cookie fayl:</strong> www.youtube.com_cookies.txt
+            </div>
+            
+            <div class="proxy-info">
+                <strong>🌐 Proxy holati:</strong> ${PROXY_LIST.length} ta proxy mavjud<br>
+                <strong>🔄 YouTube:</strong> Proxy + Cookie bilan ishlaydi
             </div>
 
             <h3>📋 Qo'llab-quvvatlanadigan platformalar:</h3>
@@ -353,10 +452,14 @@ app.get('/', (req, res) => {
             
             <h3>📊 Status:</h3>
             <code>GET /status</code>
+            
+            <h3>🌐 Proxy ro'yxati:</h3>
+            <code>GET /proxies</code>
         </div>
     </body>
     </html>
-  `);
+  `;
+  res.send(html);
 });
 
 // ========== SERVERNI ISHGA TUSHIRISH ==========
@@ -367,6 +470,7 @@ app.listen(PORT, () => {
   console.log(`📡 Server: http://localhost:${PORT}`);
   console.log(`🍪 Cookie: ${hasCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
   console.log(`📄 Cookie fayl: www.youtube.com_cookies.txt`);
+  console.log(`🌐 Proxies: ${PROXY_LIST.length} ta`);
   console.log(`🎯 Platformalar: 1000+`);
   console.log('='.repeat(60) + '\n');
 });
