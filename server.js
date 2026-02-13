@@ -66,7 +66,7 @@ function testProxy(proxy) {
 
 // Ishchi proxy topish
 async function findWorkingProxy() {
-  console.log('🔄 Ishchi proxy qidirilmoqda do\'stim...');
+  console.log('🔄 Ishchi proxy qidirilmoqda...');
   
   // Proxylarni aralashtirish
   const shuffled = [...PROXY_LIST].sort(() => Math.random() - 0.5);
@@ -78,21 +78,21 @@ async function findWorkingProxy() {
     console.log(`   Sinov: ${proxy}`);
     const works = await testProxy(proxy);
     if (works) {
-      console.log(`   ✅ Ishchi proxy topildi do\'stim: ${proxy}`);
+      console.log(`   ✅ Ishchi proxy topildi: ${proxy}`);
       return proxy;
     }
   }
   
-  console.log('   ⚠️ Ishchi proxy topilmadi, tasodifiy ishlatiladi do\'stim');
+  console.log('   ⚠️ Ishchi proxy topilmadi, tasodifiy ishlatiladi');
   return getRandomProxy();
 }
 
 console.log('\n' + '='.repeat(60));
 console.log('🚀 PREMIUM VIDEO DOWNLOADER SERVER');
 console.log('='.repeat(60));
-console.log(`🍪 YouTube cookie: ${hasYTCookies ? 'mavjud do\'stim✅' : 'mavjud emas do\'stim ❌'}`);
-console.log(`🍪 Instagram cookie: ${hasInstaCookies ? 'mavjud do\'stim ✅' : 'mavjud emas do\'stim ❌'}`);
-console.log(`🌐 Proxy soni: ${PROXY_LIST.length} ta do\'stim`);
+console.log(`🍪 YouTube cookie: ${hasYTCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
+console.log(`🍪 Instagram cookie: ${hasInstaCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
+console.log(`🌐 Proxy soni: ${PROXY_LIST.length} ta`);
 console.log('='.repeat(60) + '\n');
 
 // ========== UNIVERSAL DOWNLOAD ENDPOINT ==========
@@ -100,11 +100,11 @@ app.get('/download', async (req, res) => {
   try {
     const videoUrl = req.query.url;
     if (!videoUrl) {
-      return res.status(400).json({ error: 'URL kerakda do\'stim' });
+      return res.status(400).json({ error: 'URL kerak' });
     }
 
     console.log('\n' + '='.repeat(60));
-    console.log(`📥 YUKLANMOQDA DO\'STIM: ${videoUrl}`);
+    console.log(`📥 YUKLANMOQDA: ${videoUrl}`);
     console.log('='.repeat(60));
 
     // Platformani aniqlash
@@ -158,9 +158,9 @@ app.get('/download', async (req, res) => {
       // YouTube Cookie
       if (hasYTCookies) {
         command += ` --cookies "${YT_COOKIE_FILE}"`;
-        console.log('🍪 YouTube cookie ishlatilmoqda do\'stim');
+        console.log('🍪 YouTube cookie ishlatilmoqda');
       } else {
-        console.log('⚠️ YouTube cookie yo\'q, alternativ usul ishlatilmoqda do\'stim');
+        console.log('⚠️ YouTube cookie yo\'q, alternativ usul ishlatilmoqda');
         command += ' --extractor-args "youtube:player_client=android_embedded,ios"';
         command += ' --extractor-args "youtube:skip=webpage"';
         command += ' --geo-bypass';
@@ -181,9 +181,9 @@ app.get('/download', async (req, res) => {
       // Instagram Cookie
       if (hasInstaCookies) {
         command += ` --cookies "${INSTA_COOKIE_FILE}"`;
-        console.log('🍪 Instagram cookie ishlatilmoqda do\'stim');
+        console.log('🍪 Instagram cookie ishlatilmoqda');
       } else {
-        console.log('⚠️ Instagram cookie yo\'q, faqat ochiq postlar ishlaydida do\'stim');
+        console.log('⚠️ Instagram cookie yo\'q, faqat ochiq postlar ishlaydi');
       }
     }
     
@@ -242,8 +242,8 @@ app.get('/download', async (req, res) => {
     // Umumiy parametr: video URL
     command += ` "${videoUrl}"`;
     
-    console.log('⚙️ Buyruq tuzildi do\'stim');
-    console.log('⏳ Yuklab olinmoqda do\'stim...');
+    console.log('⚙️ Buyruq tuzildi');
+    console.log('⏳ Yuklab olinmoqda...');
     
     // yt-dlp ni ishga tushirish
     const ytdlp = exec(command, {
@@ -287,35 +287,35 @@ app.get('/download', async (req, res) => {
         // Videoni yuborish
         res.send(videoBuffer);
         
-        console.log('✅ Yuklab olish tugadi do\'stim!\n');
+        console.log('✅ Yuklab olish tugadi!\n');
       } else {
         // Xatolik
-        console.error('❌ Xatolik:', errorMessage || 'Noma\'lum xatolik do\'stim 😐');
+        console.error('❌ Xatolik:', errorMessage || 'Noma\'lum xatolik');
         
         // 429 xatosi bo'lsa, maxsus xabar
         const is429 = errorMessage.includes('429');
         const isInstagramError = errorMessage.includes('Instagram') && errorMessage.includes('login');
         
-        let tip = 'Boshqa URL sinab ko\'ring yoki keyinroq qayta urining do\'stim.';
+        let tip = 'Boshqa URL sinab ko\'ring yoki keyinroq qayta urining.';
         
         if (is429) {
-          tip = 'YouTube 429 xatosi - juda ko\'p so\'rov. Server proxy ishlatadi, 1 soat kuting yoki boshqa video sinab ko\'ring do\'stim.';
+          tip = 'YouTube 429 xatosi - juda ko\'p so\'rov. Server proxy ishlatadi, 1 soat kuting yoki boshqa video sinab ko\'ring.';
         } else if (isInstagramError) {
-          tip = 'Instagram posti private/maxfiy yoki login talab qiladi. Instagram cookie mavjudligini tekshiring do\'stim.';
+          tip = 'Instagram posti private yoki login talab qiladi. Instagram cookie mavjudligini tekshiring.';
         }
         
         res.status(500).json({
-          error: 'Yuklab olishda xatolik do\'stim',
-          details: errorMessage || 'Noma\'lum xatolik do\'stim',
+          error: 'Yuklab olishda xatolik',
+          details: errorMessage || 'Noma\'lum xatolik',
           tip: tip
         });
       }
     });
     
   } catch (error) {
-    console.error('❌ Server xatoligi do\'stim:', error);
+    console.error('❌ Server xatoligi:', error);
     res.status(500).json({ 
-      error: 'Server xatoligi do\'stim',
+      error: 'Server xatoligi',
       details: error.message 
     });
   }
@@ -336,7 +336,7 @@ app.post('/upload-cookies', express.raw({ type: 'text/plain', limit: '1mb' }), (
     const { platform } = req.query;
     
     if (!platform) {
-      return res.status(400).json({ error: 'Platforma tanlang do\'stim (youtube yoki instagram)' });
+      return res.status(400).json({ error: 'Platforma tanlang (youtube yoki instagram)' });
     }
     
     let cookieFile;
@@ -345,14 +345,14 @@ app.post('/upload-cookies', express.raw({ type: 'text/plain', limit: '1mb' }), (
     } else if (platform === 'instagram') {
       cookieFile = INSTA_COOKIE_FILE;
     } else {
-      return res.status(400).json({ error: 'Noto\'g\'ri platforma do\'stim' });
+      return res.status(400).json({ error: 'Noto\'g\'ri platforma' });
     }
     
     // Cookies.txt formatida ekanligini tekshirish
     if (!cookieData.includes('.youtube.com') && !cookieData.includes('instagram.com') && !cookieData.includes('HTTP')) {
       return res.status(400).json({ 
         error: 'Noto\'g\'ri cookie formati',
-        tip: 'Cookie fayl Netscape formatida bo\'lishi kerakda do\'stim'
+        tip: 'Cookie fayl Netscape formatida bo\'lishi kerak'
       });
     }
     
@@ -365,14 +365,14 @@ app.post('/upload-cookies', express.raw({ type: 'text/plain', limit: '1mb' }), (
       hasInstaCookies = true;
     }
     
-    console.log(`✅ Yangi ${platform} cookie fayl yuklandi do\'stim`);
+    console.log(`✅ Yangi ${platform} cookie fayl yuklandi`);
     res.json({ 
       success: true, 
-      message: `${platform} cookie fayl muvaffaqiyatli yuklandi do\'stim` 
+      message: `${platform} cookie fayl muvaffaqiyatli yuklandi` 
     });
     
   } catch (error) {
-    console.error('❌ Cookie yuklash xatoligi do\'stim:', error);
+    console.error('❌ Cookie yuklash xatoligi:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -382,13 +382,13 @@ app.get('/status', (req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    youtube_cookie: hasYTCookies ? 'mavjud ekan do\'stim ✅' : 'mavjud emas ekan do\'stim ❌',
-    instagram_cookie: hasInstaCookies ? 'mavjud ekan do\'stim ✅' : 'mavjud emas ekan do\'stim ❌',
+    youtube_cookie: hasYTCookies ? 'mavjud ✅' : 'mavjud emas ❌',
+    instagram_cookie: hasInstaCookies ? 'mavjud ✅' : 'mavjud emas ❌',
     proxies: PROXY_LIST.length,
     platforms: [
       'YouTube', 'Instagram', 'TikTok', 'Facebook',
       'Twitter/X', 'Pinterest', 'Vimeo', 'Dailymotion',
-      'Twitch', 'Reddit', 'Telegram', ' yana +1000 do\'stim'
+      'Twitch', 'Reddit', 'Telegram', '+1000'
     ]
   });
 });
@@ -481,19 +481,19 @@ app.get('/', (req, res) => {
             </h1>
             
             <div class="status">
-                ✅ SERVER ISHGA TUSHDI DO\'STIM! <br>
-                <small>${new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent ekan do\'stim' })}</small>
+                ✅ SERVER ISHGA TUSHDI! <br>
+                <small>${new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}</small>
             </div>
             
             <div class="cookie-status">
-                <strong>🍪 YouTube cookie:</strong> ${hasYTCookies ? 'MAVJUD DO\'STIM ✅' : 'MAVJUD EMAS DO\'STIM ❌'}<br>
-                <strong>🍪 Instagram cookie:</strong> ${hasInstaCookies ? 'MAVJUD DO\'STIM ✅' : 'MAVJUD EMAS DO\'STIM ❌'}
+                <strong>🍪 YouTube cookie:</strong> ${hasYTCookies ? 'MAVJUD ✅' : 'MAVJUD EMAS ❌'}<br>
+                <strong>🍪 Instagram cookie:</strong> ${hasInstaCookies ? 'MAVJUD ✅' : 'MAVJUD EMAS ❌'}
             </div>
             
             <div class="proxy-info">
-                <strong>🌐 Proxy holati:</strong> ${PROXY_LIST.length} ta proxy mavjud do\'stim<br>
-                <strong>🔄 YouTube:</strong> Proxy + Cookie bilan ishlaydi do\'stim<br>
-                <strong>📸 Instagram:</strong> ${hasInstaCookies ? 'Cookie bilan ✅' : 'Cookie yo\'q, faqat ochiq postlar do\'stim'}
+                <strong>🌐 Proxy holati:</strong> ${PROXY_LIST.length} ta proxy mavjud<br>
+                <strong>🔄 YouTube:</strong> Proxy + Cookie bilan ishlaydi<br>
+                <strong>📸 Instagram:</strong> ${hasInstaCookies ? 'Cookie bilan ✅' : 'Cookie yo\'q, faqat ochiq postlar'}
             </div>
 
             <h3>📋 Qo'llab-quvvatlanadigan platformalar:</h3>
@@ -512,7 +512,7 @@ app.get('/', (req, res) => {
                 <div class="platform">➕ 1000+</div>
             </div>
 
-            <h3>🔧 Ishlatishni ko'ring do\'stim:</h3>
+            <h3>🔧 Ishlatish:</h3>
             <code>GET /download?url=VIDEO_URL</code>
             
             <h3>📌 Misol:</h3>
@@ -542,8 +542,8 @@ app.listen(PORT, () => {
   console.log('🚀 PREMIUM VIDEO DOWNLOADER');
   console.log('='.repeat(60));
   console.log(`📡 Server: http://localhost:${PORT}`);
-  console.log(`🍪 YouTube cookie: ${hasYTCookies ? 'mavjud ekan do\'stim✅' : 'mavjud emas ekan do\'stim ❌'}`);
-  console.log(`🍪 Instagram cookie: ${hasInstaCookies ? 'mavjud ekan do\'stim ✅' : 'mavjud emas ekan do\'stim❌'}`);
+  console.log(`🍪 YouTube cookie: ${hasYTCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
+  console.log(`🍪 Instagram cookie: ${hasInstaCookies ? 'mavjud ✅' : 'mavjud emas ❌'}`);
   console.log(`🌐 Proxies: ${PROXY_LIST.length} ta`);
   console.log(`🎯 Platformalar: 1000+`);
   console.log('='.repeat(60) + '\n');
