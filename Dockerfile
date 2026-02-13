@@ -1,11 +1,18 @@
 FROM node:18-alpine
 
-# yt-dlp va ffmpeg o'rnatish
-RUN apk add --no-cache \
+# OpenSSL va boshqa paketlarni yangilash
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
     python3 \
     ffmpeg \
     yt-dlp \
-    curl
+    curl \
+    openssl \
+    ca-certificates && \
+    update-ca-certificates
+
+# OpenSSL versiyasini tekshirish
+RUN openssl version
 
 WORKDIR /app
 
